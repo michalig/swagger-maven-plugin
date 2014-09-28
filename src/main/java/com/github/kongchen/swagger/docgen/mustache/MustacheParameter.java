@@ -36,7 +36,7 @@ public class MustacheParameter {
         this.access = Utils.getStrInOption(para.paramAccess());
     }
 
-    String getDefaultValue() {
+    public String getDefaultValue() {
         return defaultValue;
     }
 

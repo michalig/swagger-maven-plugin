@@ -1,10 +1,9 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
-import com.github.kongchen.swagger.docgen.util.Utils;
-import com.wordnik.swagger.model.ApiDescription;
-
 import java.util.LinkedList;
 import java.util.List;
+
+import com.github.kongchen.swagger.docgen.util.Utils;
 
 public class MustacheApi {
     private final String description;
@@ -15,7 +14,7 @@ public class MustacheApi {
 
     private final List<MustacheOperation> operations = new LinkedList<MustacheOperation>();
 
-    public MustacheApi(String basePath, ApiDescription api) {
+    public MustacheApi(String basePath, ExtendedApiDescription api) {
         this.path = api.path();
         if (this.path != null && !this.path.startsWith("/")) {
             this.path = "/" + this.path;

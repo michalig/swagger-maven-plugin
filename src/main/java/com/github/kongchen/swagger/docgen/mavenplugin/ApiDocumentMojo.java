@@ -3,8 +3,6 @@ package com.github.kongchen.swagger.docgen.mavenplugin;
 import java.io.File;
 import java.util.List;
 
-import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
-import com.github.kongchen.swagger.docgen.GenerateException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -12,6 +10,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+
+import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
+import com.github.kongchen.swagger.docgen.GenerateException;
 
 /**
  * Created with IntelliJ IDEA.

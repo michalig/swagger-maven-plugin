@@ -1,20 +1,18 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
-import com.github.kongchen.swagger.docgen.DocTemplateConstants;
-import com.github.kongchen.swagger.docgen.GenerateException;
-import com.wordnik.swagger.core.ApiValues;
-import com.wordnik.swagger.model.Authorization;
-import com.wordnik.swagger.model.Operation;
-import com.wordnik.swagger.model.Parameter;
-import com.wordnik.swagger.model.ResponseMessage;
-import scala.collection.JavaConversions;
-import scala.collection.mutable.Buffer;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+
+import scala.collection.JavaConversions;
+import scala.collection.mutable.Buffer;
+
+import com.github.kongchen.swagger.docgen.DocTemplateConstants;
+import com.wordnik.swagger.core.ApiValues;
+import com.wordnik.swagger.model.Authorization;
+import com.wordnik.swagger.model.ResponseMessage;
 
 public class MustacheOperation {
     private final int opIndex;
@@ -32,20 +30,24 @@ public class MustacheOperation {
     private final List<MustacheAuthorization> authorizations = new ArrayList<MustacheAuthorization>();
 
     private List<MustacheParameterSet> parameters;
+    private final List<String> tags;
 
-    private MustacheParameterSet requestQuery;
+	private MustacheParameterSet requestQuery;
     private MustacheParameterSet requestHeader;
     private MustacheParameterSet requestBody;
     private MustacheParameterSet requestPath;
     private MustacheParameterSet responseHeader;
 
-    private static final Pattern genericInNotes = Pattern.compile("(/\\*.*<)((\\w+|((\\w+\\.)+\\w+))|(((\\w+|((\\w+\\.)+\\w+)),)+(\\w+|((\\w+\\.)+\\w+))))(>.*\\*/)");
+    private MustacheResponseClass requestBodyClass;
+
+	private static final Pattern genericInNotes = Pattern.compile("(/\\*.*<)((\\w+|((\\w+\\.)+\\w+))|(((\\w+|((\\w+\\.)+\\w+)),)+(\\w+|((\\w+\\.)+\\w+))))(>.*\\*/)");
 
     private List<MustacheResponseMessage> errorResponses = new ArrayList<MustacheResponseMessage>();
 
     List<MustacheSample> samples;
 
-    public MustacheOperation(MustacheDocument mustacheDocument, Operation op) {
+
+    public MustacheOperation(MustacheDocument mustacheDocument, ExtendedOperation op) {
         Buffer<Authorization> authorBuffer = op.authorizations().toBuffer();
         for(Authorization authorization : JavaConversions.asJavaList(authorBuffer)) {
             this.authorizations.add(new MustacheAuthorization(authorization));
@@ -56,8 +58,8 @@ public class MustacheOperation {
         this.notes = notesAndGenericStr.getKey();
         this.summary = op.summary();
         this.nickname = op.nickname();
-        Buffer<Parameter> buffer = op.parameters().toBuffer();
-        this.parameters = mustacheDocument.analyzeParameters(JavaConversions.asJavaList(buffer));
+        this.tags = op.tags();
+        this.parameters = mustacheDocument.analyzeParameters(op.parameters());
         responseClass = new MustacheResponseClass(op.responseClass() + notesAndGenericStr.getValue());
         Buffer<ResponseMessage> errorbuffer = op.responseMessages().toBuffer();
         List<ResponseMessage> responseMessages = JavaConversions.asJavaList(errorbuffer);
@@ -78,6 +80,13 @@ public class MustacheOperation {
                 this.requestHeader = para;
             } else if (para.getParamType().equals(ApiValues.TYPE_BODY())) {
                 this.requestBody = para;
+                if (para.getParas() != null && !para.getParas().isEmpty()) {
+                	if (para.getParas().get(0).getLinkType() != null) {
+                		this.requestBodyClass = new MustacheResponseClass(para.getParas().get(0).getLinkType());
+                	} else if (para.getParas().get(0).getType() != null) {
+                		this.requestBodyClass = new MustacheResponseClass(para.getParas().get(0).getType());
+                	}
+                }
             } else if (para.getParamType().equals(ApiValues.TYPE_PATH())) {
                 this.requestPath = para;
             } else if (para.getParamType().equals(DocTemplateConstants.TYPE_RESPONSE_HEADER)) {
@@ -184,4 +193,13 @@ public class MustacheOperation {
     public List<MustacheResponseClass> getResponseClasses() {
         return responseClasses;
     }
+    
+    public List<String> getTags() {
+		return tags;
+	}
+    
+    public MustacheResponseClass getRequestBodyClass() {
+		return requestBodyClass;
+	}
+
 }

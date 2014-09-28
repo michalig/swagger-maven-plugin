@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.github.kongchen.swagger.docgen.GenerateException;
 import com.wordnik.swagger.annotations.Api;
+
 import org.apache.maven.plugins.annotations.Parameter;
 import org.reflections.Reflections;
 
@@ -69,6 +70,9 @@ public class ApiSource {
      */
     @Parameter
     private String swaggerInternalFilter;
+
+    @Parameter
+	private String exampleProvider;
 
     public Set<Class> getValidClasses() throws GenerateException {
         Set<Class> classes = new HashSet<Class>();
@@ -190,4 +194,8 @@ public class ApiSource {
     public void setSwaggerInternalFilter(String swaggerInternalFilter) {
         this.swaggerInternalFilter = swaggerInternalFilter;
     }
+
+	public String getExampleProvider() {
+		return this.exampleProvider;
+	}
 }

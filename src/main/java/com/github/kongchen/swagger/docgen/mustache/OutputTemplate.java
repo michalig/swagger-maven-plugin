@@ -1,6 +1,15 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
@@ -8,9 +17,7 @@ import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.TypeUtils;
 import com.github.kongchen.swagger.docgen.mavenplugin.ApiSourceInfo;
 import com.github.kongchen.swagger.docgen.util.Utils;
-import com.wordnik.swagger.model.ApiDescription;
-import com.wordnik.swagger.model.ApiListing;
-import com.wordnik.swagger.model.Operation;
+import com.google.common.collect.Maps;
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,6 +34,7 @@ public class OutputTemplate {
     private List<MustacheDocument> apiDocuments = new ArrayList<MustacheDocument>();
 
     private Set<MustacheDataType> dataTypes = new TreeSet<MustacheDataType>();
+    private Map<String, MustacheDataType> dataTypesMap = new HashMap<String, MustacheDataType>();
 
     public OutputTemplate(AbstractDocumentSource docSource) {
         feedSource(docSource);
@@ -42,6 +50,15 @@ public class OutputTemplate {
         }
     }
 
+    public Map<String, MustacheDataType> getDataTypesMap() {
+    	if (dataTypesMap.isEmpty()) { 
+    		for (MustacheDataType dataType : dataTypes) {
+    			dataTypesMap.put(dataType.getName(), dataType);
+    		}
+    	}
+    	return dataTypesMap;
+    }
+    
     public Set<MustacheDataType> getDataTypes() {
         return dataTypes;
     }
@@ -94,17 +111,17 @@ public class OutputTemplate {
      * @param swaggerDoc
      * @return
      */
-    private MustacheDocument createMustacheDocument(ApiListing swaggerDoc) {
+    private MustacheDocument createMustacheDocument(ExtendedApiListing swaggerDoc) {
         MustacheDocument mustacheDocument = new MustacheDocument(swaggerDoc);
         
-        for (scala.collection.Iterator<ApiDescription> it = swaggerDoc.apis().iterator(); it.hasNext(); ) {
-            ApiDescription api = it.next();
+        for (Iterator<ExtendedApiDescription> it = swaggerDoc.apis().iterator(); it.hasNext(); ) {
+        	ExtendedApiDescription api = it.next();
             mustacheDocument.setDescription(Utils.getStrInOption(api.description()));
 
             MustacheApi mustacheApi = new MustacheApi(swaggerDoc.basePath(), api);
 
-            for (scala.collection.Iterator<Operation> opIt  = api.operations().iterator(); opIt.hasNext(); ) {
-                Operation op = opIt.next();
+            for (Iterator<ExtendedOperation> opIt  = api.operations().iterator(); opIt.hasNext(); ) {
+            	ExtendedOperation op = opIt.next();
                 MustacheOperation mustacheOperation = null;
                 mustacheOperation = new MustacheOperation(mustacheDocument, op);
                 mustacheApi.addOperation(mustacheOperation);
@@ -167,7 +184,7 @@ public class OutputTemplate {
         setApiVersion(source.getApiVersion());
         setBasePath(source.getBasePath());
         setApiInfo(source.getApiInfo());
-        for (ApiListing doc : source.getValidDocuments()) {
+        for (ExtendedApiListing doc : source.getValidDocuments()) {
             if (doc.apis().isEmpty()){
                 continue;
             }

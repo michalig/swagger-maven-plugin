@@ -56,7 +56,7 @@ public class MustacheDocument implements Comparable<MustacheDocument> {
         hashValueMap.put(DocTemplateConstants.TYPE_RESPONSE_HEADER, 5);
     }
 
-    public MustacheDocument(ApiListing apiListing) {
+    public MustacheDocument(ExtendedApiListing apiListing) {
         if (!apiListing.models().isEmpty()) {
             models.putAll(JavaConversions.mapAsJavaMap(apiListing.models().get()));
         }
@@ -151,7 +151,7 @@ public class MustacheDocument implements Comparable<MustacheDocument> {
     }
 
     private Map<String, List<MustacheParameter>> toParameterTypeMap(List<Parameter> parameters) {
-        Map<String, List<MustacheParameter>> paraMap = new HashMap<String, List<MustacheParameter>>();
+        Map<String, List<MustacheParameter>> paraMap = new LinkedHashMap<String, List<MustacheParameter>>();
 
         for (Parameter para : parameters) {
             MustacheParameter mustacheParameter = analyzeParameter(para);

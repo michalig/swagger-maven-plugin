@@ -1,27 +1,12 @@
 package com.github.kongchen.swagger.docgen;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.kongchen.swagger.docgen.mavenplugin.ApiSourceInfo;
-import com.github.kongchen.swagger.docgen.mustache.OutputTemplate;
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-import com.wordnik.swagger.converter.ModelConverters;
-import com.wordnik.swagger.converter.OverrideConverter;
-import com.wordnik.swagger.core.util.JsonSerializer;
-import com.wordnik.swagger.core.util.JsonUtil;
-import com.wordnik.swagger.model.ApiListing;
-import com.wordnik.swagger.model.ApiListingReference;
-import com.wordnik.swagger.model.ResourceListing;
-
-import org.apache.commons.io.FileUtils;
-
-import scala.collection.Iterator;
-import scala.collection.JavaConversions;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +14,30 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+
+import scala.collection.Iterator;
+import scala.collection.JavaConversions;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.kongchen.swagger.docgen.mavenplugin.ApiSourceInfo;
+import com.github.kongchen.swagger.docgen.mustache.ExtendedApiListing;
+import com.github.kongchen.swagger.docgen.mustache.OutputTemplate;
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.wordnik.swagger.converter.ModelConverters;
+import com.wordnik.swagger.converter.OverrideConverter;
+import com.wordnik.swagger.core.util.JsonSerializer;
+import com.wordnik.swagger.core.util.JsonUtil;
+import com.wordnik.swagger.model.ApiListingReference;
+import com.wordnik.swagger.model.ResourceListing;
 
 /**
  * Created with IntelliJ IDEA.
@@ -49,13 +58,13 @@ public abstract class AbstractDocumentSource {
 
 	protected ResourceListing serviceDocument;
 
-	List<ApiListing> validDocuments = new ArrayList<ApiListing>();
+	List<ExtendedApiListing> validDocuments = new ArrayList<ExtendedApiListing>();
 
 	private String basePath;
 
 	private String apiVersion;
-    
-    private ApiSourceInfo apiInfo;
+
+	private ApiSourceInfo apiInfo;
 
 	private ObjectMapper mapper = new ObjectMapper();
 
@@ -65,9 +74,12 @@ public abstract class AbstractDocumentSource {
 
 	private String overridingModels;
 
+	private Object exampleProvider;
+	
 	public AbstractDocumentSource(LogAdapter logAdapter, String outputPath,
 			String outputTpl, String swaggerOutput, String mustacheFileRoot,
-			boolean useOutputFlatStructure1, String overridingModels) {
+			boolean useOutputFlatStructure1, String overridingModels,
+			String exampleProviderClassName) {
 		LOG = logAdapter;
 		this.outputPath = outputPath;
 		this.templatePath = outputTpl;
@@ -75,6 +87,14 @@ public abstract class AbstractDocumentSource {
 		this.useOutputFlatStructure = useOutputFlatStructure1;
 		this.swaggerPath = swaggerOutput;
 		this.overridingModels = overridingModels;
+		if (exampleProviderClassName != null) {
+			try {
+				this.exampleProvider = Class.forName(exampleProviderClassName).newInstance();
+			} catch (Exception e) {
+				LOG.error("Error setting exampleProvider for class " + exampleProviderClassName + ": " + e.getMessage());
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public abstract void loadDocuments() throws Exception, GenerateException;
@@ -99,15 +119,15 @@ public abstract class AbstractDocumentSource {
 		return outputTemplate;
 	}
 
-    public ApiSourceInfo getApiInfo() {
-        return apiInfo;
-    }
+	public ApiSourceInfo getApiInfo() {
+		return apiInfo;
+	}
 
-    public void setApiInfo(ApiSourceInfo apiInfo) {
-        this.apiInfo = apiInfo;
-    }
+	public void setApiInfo(ApiSourceInfo apiInfo) {
+		this.apiInfo = apiInfo;
+	}
 
-    protected void acceptDocument(ApiListing doc) {
+	protected void acceptDocument(ExtendedApiListing doc) {
 		String basePath;
 		// will append api's basePath. However, apiReader does not read it
 		// correctly by now
@@ -116,15 +136,11 @@ public abstract class AbstractDocumentSource {
 		} else {
 			basePath = this.basePath;
 		}
-		ApiListing newDoc = new ApiListing(doc.apiVersion(),
-				doc.swaggerVersion(), basePath, doc.resourcePath(),
-				doc.produces(), doc.consumes(), doc.protocols(),
-				doc.authorizations(), doc.apis(), doc.models(),
-				doc.description(), doc.position());
-		validDocuments.add(newDoc);
+		doc.setBasePath(basePath);
+		validDocuments.add(doc);
 	}
 
-	public List<ApiListing> getValidDocuments() {
+	public List<ExtendedApiListing> getValidDocuments() {
 		return validDocuments;
 	}
 
@@ -155,7 +171,7 @@ public abstract class AbstractDocumentSource {
 		// rewrite basePath in swagger-ui output file using the value in
 		// configuration file.
 		writeInDirectory(dir, serviceDocument, swaggerUIDocBasePath);
-		for (ApiListing doc : validDocuments) {
+		for (ExtendedApiListing doc : validDocuments) {
 			writeInDirectory(dir, doc, basePath);
 		}
 	}
@@ -242,7 +258,7 @@ public abstract class AbstractDocumentSource {
 		return name + ".json";
 	}
 
-	private void writeInDirectory(File dir, ApiListing apiListing,
+	private void writeInDirectory(File dir, ExtendedApiListing apiListing,
 			String basePath) throws GenerateException {
 		String filename = resourcePathToFilename(apiListing.resourcePath());
 		try {
@@ -302,7 +318,7 @@ public abstract class AbstractDocumentSource {
 		return outputTemplate;
 	}
 
-	public void toDocuments() throws GenerateException {
+	public void toDocuments() throws GenerateException, IOException {
 		if (outputTemplate == null) {
 			prepareMustacheTemplate();
 		}
@@ -321,20 +337,33 @@ public abstract class AbstractDocumentSource {
 		OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream,
 				Charset.forName("UTF-8"));
 
-		try {
-			URL url = getTemplateUri().toURL();
-			InputStreamReader reader = new InputStreamReader(url.openStream(),
-					Charset.forName("UTF-8"));
-			Mustache mustache = getMustacheFactory().compile(reader,
-					templatePath);
-
-			mustache.execute(writer, outputTemplate).flush();
+		if (templatePath.endsWith("vm")) {
+			// use Velocity template - hell yeah!!!
+			VelocityEngine ve = new VelocityEngine();
+			ve.init();
+			Template t = ve.getTemplate(templatePath);
+			VelocityContext context = new VelocityContext();
+			context.put("template", outputTemplate);
+			context.put("example", exampleProvider);
+			t.merge(context, writer);
+			writer.flush();
 			writer.close();
-			LOG.info("Done!");
-		} catch (MalformedURLException e) {
-			throw new GenerateException(e);
-		} catch (IOException e) {
-			throw new GenerateException(e);
+		} else {
+			try {
+				URL url = getTemplateUri().toURL();
+				InputStreamReader reader = new InputStreamReader(url.openStream(),
+						Charset.forName("UTF-8"));
+				Mustache mustache = getMustacheFactory().compile(reader,
+						templatePath);
+
+				mustache.execute(writer, outputTemplate).flush();
+				writer.close();
+				LOG.info("Done!");
+			} catch (MalformedURLException e) {
+				throw new GenerateException(e);
+			} catch (IOException e) {
+				throw new GenerateException(e);
+			}
 		}
 	}
 
@@ -373,4 +402,9 @@ public abstract class AbstractDocumentSource {
 			return new DefaultMustacheFactory(new File(mustacheFileRoot));
 		}
 	}
+
+	public Object getExampleProvider() {
+		return exampleProvider;
+	}
+
 }

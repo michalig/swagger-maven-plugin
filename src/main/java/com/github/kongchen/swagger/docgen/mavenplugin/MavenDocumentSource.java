@@ -3,6 +3,7 @@ package com.github.kongchen.swagger.docgen.mavenplugin;
 import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.GenerateException;
 import com.github.kongchen.swagger.docgen.LogAdapter;
+import com.github.kongchen.swagger.docgen.mustache.ExtendedApiListing;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.config.FilterFactory;
 import com.wordnik.swagger.config.FilterFactory$;
@@ -40,7 +41,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 
     public MavenDocumentSource(ApiSource apiSource, Log log) {
         super(new LogAdapter(log),
-              apiSource.getOutputPath(), apiSource.getOutputTemplate(), apiSource.getSwaggerDirectory(), apiSource.mustacheFileRoot, apiSource.isUseOutputFlatStructure(), apiSource.getOverridingModels());
+              apiSource.getOutputPath(), apiSource.getOutputTemplate(), apiSource.getSwaggerDirectory(), apiSource.mustacheFileRoot, apiSource.isUseOutputFlatStructure(), apiSource.getOverridingModels(), apiSource.getExampleProvider());
 
         setApiVersion(apiSource.getApiVersion());
         setBasePath(apiSource.getBasePath());
@@ -80,7 +81,10 @@ public class MavenDocumentSource extends AbstractDocumentSource {
             authorizationTypes.addAll(JavaConversions.asJavaList(buffer));
             ApiListingReference apiListingReference = new ApiListingReference(doc.resourcePath(), doc.description(), doc.position());
             apiListingReferences.add(apiListingReference);
-            acceptDocument(doc);
+            
+            ExtendedApiListing extended = extend(doc, c);
+            
+            acceptDocument(extended);
         }
         // sort apiListingRefernce by position
         Collections.sort(apiListingReferences, new Comparator<ApiListingReference>() {
@@ -105,7 +109,12 @@ public class MavenDocumentSource extends AbstractDocumentSource {
             info.getLicense(), info.getLicenseUrl()));
     }
 
-    private ApiListing getDocFromClass(Class c, SwaggerConfig swaggerConfig, String basePath) throws Exception {
+    private ExtendedApiListing extend(ApiListing doc, Class<?> c) {
+    	ExtendedApiListing extended = new ExtendedApiListing(doc, c);
+		return extended;
+	}
+
+	private ApiListing getDocFromClass(Class c, SwaggerConfig swaggerConfig, String basePath) throws Exception {
         Api resource = (Api) c.getAnnotation(Api.class);
 
         if (resource == null) return null;
