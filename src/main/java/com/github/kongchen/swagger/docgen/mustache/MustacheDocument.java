@@ -2,15 +2,18 @@ package com.github.kongchen.swagger.docgen.mustache;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.kongchen.swagger.docgen.DocTemplateConstants;
+import com.github.kongchen.swagger.docgen.TypeUtils;
 import com.github.kongchen.swagger.docgen.util.Utils;
 import com.wordnik.swagger.core.ApiValues;
 import com.wordnik.swagger.core.util.ModelUtil;
 import com.wordnik.swagger.model.*;
+
 import scala.Option;
 import scala.collection.Iterator;
 import scala.collection.JavaConversions;
 import scala.collection.mutable.LinkedEntry;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -121,7 +124,7 @@ public class MustacheDocument implements Comparable<MustacheDocument> {
 
     }
 
-    public List<MustacheParameterSet> analyzeParameters(List<Parameter> parameters) {
+    public List<MustacheParameterSet> analyzeParameters(List<ExtendedParameter> parameters) {
         if (parameters == null) return null;
         List<MustacheParameterSet> parameterList = new ArrayList<MustacheParameterSet>();
 
@@ -150,10 +153,10 @@ public class MustacheDocument implements Comparable<MustacheDocument> {
         return parameterList;
     }
 
-    private Map<String, List<MustacheParameter>> toParameterTypeMap(List<Parameter> parameters) {
+    private Map<String, List<MustacheParameter>> toParameterTypeMap(List<ExtendedParameter> parameters) {
         Map<String, List<MustacheParameter>> paraMap = new LinkedHashMap<String, List<MustacheParameter>>();
 
-        for (Parameter para : parameters) {
+        for (ExtendedParameter para : parameters) {
             MustacheParameter mustacheParameter = analyzeParameter(para);
 
             List<MustacheParameter> paraList = paraMap.get(para.paramType());
@@ -167,7 +170,7 @@ public class MustacheDocument implements Comparable<MustacheDocument> {
         return paraMap;
     }
 
-    private MustacheParameter analyzeParameter(Parameter para) {
+    private MustacheParameter analyzeParameter(ExtendedParameter para) {
         MustacheParameter mustacheParameter = null;
         mustacheParameter = new MustacheParameter(para);
 
@@ -198,7 +201,13 @@ public class MustacheDocument implements Comparable<MustacheDocument> {
 
             for (Iterator<LinkedEntry<String, ModelProperty>> it = field.properties().entriesIterator(); it.hasNext(); ) {
                 LinkedEntry<String, ModelProperty> entry = it.next();
-                MustacheItem mustacheItem = new MustacheItem(entry.key(), entry.value());
+                Field clazzField = null;
+				try {
+					clazzField = TypeUtils.getField(Class.forName(field.qualifiedType()), entry.key());
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+                MustacheItem mustacheItem = new MustacheItem(entry.key(), entry.value(), clazzField);
 
                 Option<ModelRef> itemOption = entry.value().items();
                 ModelRef item = itemOption.isEmpty() ? null : itemOption.get();

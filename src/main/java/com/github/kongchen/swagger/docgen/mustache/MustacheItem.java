@@ -1,5 +1,11 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.github.kongchen.swagger.docgen.TypeUtils;
 import com.github.kongchen.swagger.docgen.util.Utils;
 import com.wordnik.swagger.model.ModelProperty;
@@ -23,7 +29,9 @@ public class MustacheItem {
 
     private int position;
 
-    public MustacheItem(String name, ModelProperty documentationSchema) {
+    private Map<String, Map<String, String>> annotations = new HashMap<String, Map<String,String>>();
+    
+    public MustacheItem(String name, ModelProperty documentationSchema, Field field) {
 
         this.name = name;
         this.type = documentationSchema.type();
@@ -34,8 +42,17 @@ public class MustacheItem {
         this.linkType = TypeUtils.filterBasicTypes(this.linkType);
         this.allowableValue = Utils.allowableValuesToString(documentationSchema.allowableValues());
         this.position = documentationSchema.position();
+        if (field != null) {
+        	for (Annotation annotation : field.getAnnotations()) {
+        		annotations.put(annotation.annotationType().getName(), TypeUtils.annotationToMap(annotation));
+        	}
+        }
     }
 
+    public Map<String, Map<String, String>> getAnnotations() {
+		return annotations;
+	}
+    
     public String getName() {
         return name;
     }
@@ -108,4 +125,13 @@ public class MustacheItem {
     public int getPosition() {
         return position;
     }
+
+	@Override
+	public String toString() {
+		return "MustacheItem [name=" + name + ", type=" + type + ", linkType=" + linkType + ", required=" + required
+				+ ", access=" + access + ", description=" + description + ", notes=" + notes + ", allowableValue="
+				+ allowableValue + ", position=" + position + ", annotations=" + annotations + "]";
+	}
+
+
 }

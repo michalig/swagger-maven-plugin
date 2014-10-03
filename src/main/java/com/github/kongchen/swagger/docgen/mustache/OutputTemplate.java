@@ -17,7 +17,6 @@ import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.TypeUtils;
 import com.github.kongchen.swagger.docgen.mavenplugin.ApiSourceInfo;
 import com.github.kongchen.swagger.docgen.util.Utils;
-import com.google.common.collect.Maps;
 
 /**
  * Created with IntelliJ IDEA.

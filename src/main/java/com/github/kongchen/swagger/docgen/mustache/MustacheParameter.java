@@ -1,12 +1,13 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
 
+import static com.github.kongchen.swagger.docgen.TypeUtils.getTrueType;
+
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kongchen.swagger.docgen.util.Utils;
-import com.wordnik.swagger.model.Parameter;
-
-import static com.github.kongchen.swagger.docgen.TypeUtils.getTrueType;
 
 public class MustacheParameter {
     private final String allowableValue;
@@ -25,17 +26,28 @@ public class MustacheParameter {
 
     private final String linkType;
 
-    public MustacheParameter(Parameter para) {
+	private Map<String, Map<String, String>> annotations;
+
+    public MustacheParameter(ExtendedParameter para) {
         this.name = para.name();
-        this.linkType = getTrueType(para.dataType());
+        if (para.allowMultiple()) { //TODO
+        	this.linkType = "List[" + getTrueType(para.dataType()) + "]";
+        } else {
+        	this.linkType = getTrueType(para.dataType());
+        }
         this.required = para.required();
         this.description = Utils.getStrInOption(para.description());
         this.type = para.dataType();
         this.defaultValue = Utils.getStrInOption(para.defaultValue());
         this.allowableValue = Utils.allowableValuesToString(para.allowableValues());
         this.access = Utils.getStrInOption(para.paramAccess());
+        this.annotations = para.getAnnotations();
     }
 
+    public Map<String, Map<String, String>> getAnnotations() {
+		return annotations;
+	}
+    
     public String getDefaultValue() {
         return defaultValue;
     }

@@ -1,12 +1,11 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
 
+import static com.github.kongchen.swagger.docgen.TypeUtils.getTrueType;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.kongchen.swagger.docgen.util.Utils;
 import com.wordnik.swagger.model.ResponseMessage;
-
-import static com.github.kongchen.swagger.docgen.TypeUtils.getTrueType;
 
 public class MustacheResponseMessage {
     private final int code;

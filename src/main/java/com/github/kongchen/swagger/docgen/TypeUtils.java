@@ -1,7 +1,13 @@
 package com.github.kongchen.swagger.docgen;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +57,37 @@ public class TypeUtils {
         }
 
         return t;
+    }
+    
+    public static Map<String, String> annotationToMap(Annotation annotation) {
+    	Class<?> annotationClass = annotation.annotationType();
+		Method[] methods = annotationClass.getDeclaredMethods();
+    	Map<String, String> result = new HashMap<String, String>();
+    	for (Method method : methods) {
+			try {
+				result.put(method.getName(), method.invoke(annotation).toString());
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			}
+    	}
+    	return result;
+    }
+    
+    public static Field getField(Class<?> clazz, String fieldName) {
+    	try {
+			return clazz.getDeclaredField(fieldName);
+		} catch (NoSuchFieldException e) {
+			if (clazz.getSuperclass() != null) {
+				return getField(clazz.getSuperclass(), fieldName);
+			}
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
+    	return null;
     }
 
     public static String filterBasicTypes(String linkType) {

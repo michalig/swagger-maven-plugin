@@ -1,10 +1,11 @@
 package com.github.kongchen.swagger.docgen.mustache;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import scala.collection.JavaConversions;
+import scala.collection.Iterator;
 import scala.collection.TraversableOnce;
 
 import com.google.common.base.Splitter;
@@ -21,26 +22,25 @@ public class ExtendedOperation {
 
 	private Operation operation;
 	private List<String> tags;
-	private List<Parameter> parameters;
+	private List<ExtendedParameter> parameters = new ArrayList<ExtendedParameter>();
 	
 	private static final List<String> ordered = Lists.newArrayList("query", "body", "response_header", "path", "header");
 
-	public ExtendedOperation(Operation operation, Class<?> c) {
+	public ExtendedOperation(Operation operation, Method method) {
 		this.operation = operation;
-		for(Method method : c.getMethods()){
-			if (method.getName().equals(operation.nickname())) {
-				//current method
-				ApiOperation apiOperation = method.getAnnotation(ApiOperation.class);
-				if (apiOperation != null) {
-					this.tags = Lists.newArrayList(Splitter.onPattern(",").omitEmptyStrings().trimResults().split(apiOperation.tags()));
-					break;
-				}
-			}
+		ApiOperation apiOperation = method.getAnnotation(ApiOperation.class);
+		if (apiOperation != null) {
+			this.tags = Lists.newArrayList(Splitter.onPattern(",").omitEmptyStrings().trimResults().split(apiOperation.tags()));
 		}
-		parameters = Lists.newArrayList(JavaConversions.asJavaList(operation.parameters()));
-		Collections.sort(parameters, new Comparator<Parameter>() {
+		Iterator<Parameter> iterator = operation.parameters().iterator();
+		while (iterator.hasNext()) {
+			Parameter parameter = iterator.next();
+			parameters.add(new ExtendedParameter(parameter, getParameter(method, parameter.name())));
+		}
+//		parameters = Lists.newArrayList(JavaConversions.asJavaList(operation.parameters()));
+		Collections.sort(parameters, new Comparator<ExtendedParameter>() {
 			@Override
-			public int compare(Parameter o1, Parameter o2) {
+			public int compare(ExtendedParameter o1, ExtendedParameter o2) {
 				if (!ordered.contains(o1.paramType())) {
 					return -1;
 				} else if (!ordered.contains(o2.paramType())) {
@@ -49,6 +49,15 @@ public class ExtendedOperation {
 				return ordered.indexOf(o1.paramType()) - ordered.indexOf(o2.paramType());
 			}
 		});
+	}
+	
+	private java.lang.reflect.Parameter getParameter(Method m, String name) {
+		for(java.lang.reflect.Parameter param : m.getParameters()){
+			if (param.getName().equals(name)) {
+				return param;
+			}
+		}
+		return null;
 	}
 
 	public List<String> tags() {
@@ -83,7 +92,7 @@ public class ExtendedOperation {
 		return operation.notes();
 	}
 
-	public List<Parameter> parameters() {
+	public List<ExtendedParameter> parameters() {
 		return parameters;
 	}
 

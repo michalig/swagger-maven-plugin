@@ -16,6 +16,7 @@ public class ExtendedApiListing {
 	private ApiListing apiListing;
 	private final List<ExtendedApiDescription> apis = new ArrayList<ExtendedApiDescription>();
 	private String basePath;
+//	private Option<Map<String, Model>> models;
 
 	public ExtendedApiListing(ApiListing apiListing, Class<?> c) {
 		this.apiListing =  apiListing;
@@ -24,6 +25,8 @@ public class ExtendedApiListing {
 		while (iterator.hasNext()) {
 			apis.add(new ExtendedApiDescription(iterator.next(), c));
 		}
+		//TODO models
+//		apiListing.models().iterator()
 	}
 	
 	public String resourcePath() {
