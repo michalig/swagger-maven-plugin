@@ -96,14 +96,15 @@ public class MustacheOperation {
     }
 
     private AbstractMap.SimpleEntry<String, String> parseGenericFromNotes(String notes) {
-        Scanner scanner = new Scanner(notes);
-        String genericString = scanner.findInLine(genericInNotes);
-        if (genericString != null) {
-            return new AbstractMap.SimpleEntry<String, String>(notes.replaceFirst(genericInNotes.pattern(), ""),
-                    genericString.replaceAll("/\\*", "").replaceAll("\\*/", "").trim());
-        } else {
-            return new AbstractMap.SimpleEntry<String, String>(notes, "");
-        }
+    	try (Scanner scanner = new Scanner(notes)) {
+	        String genericString = scanner.findInLine(genericInNotes);
+	        if (genericString != null) {
+	            return new AbstractMap.SimpleEntry<String, String>(notes.replaceFirst(genericInNotes.pattern(), ""),
+	                    genericString.replaceAll("/\\*", "").replaceAll("\\*/", "").trim());
+	        } else {
+	            return new AbstractMap.SimpleEntry<String, String>(notes, "");
+	        }
+    	}
     }
 
     public List<MustacheAuthorization> getAuthorizations() {

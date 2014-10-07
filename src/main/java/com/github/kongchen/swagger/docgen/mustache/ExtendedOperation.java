@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+
 import scala.collection.Iterator;
 import scala.collection.TraversableOnce;
 
@@ -37,7 +40,6 @@ public class ExtendedOperation {
 			Parameter parameter = iterator.next();
 			parameters.add(new ExtendedParameter(parameter, getParameter(method, parameter.name())));
 		}
-//		parameters = Lists.newArrayList(JavaConversions.asJavaList(operation.parameters()));
 		Collections.sort(parameters, new Comparator<ExtendedParameter>() {
 			@Override
 			public int compare(ExtendedParameter o1, ExtendedParameter o2) {
@@ -54,6 +56,10 @@ public class ExtendedOperation {
 	private java.lang.reflect.Parameter getParameter(Method m, String name) {
 		for(java.lang.reflect.Parameter param : m.getParameters()){
 			if (param.getName().equals(name)) {
+				return param;
+			} else if (param.getAnnotation(QueryParam.class) != null && name.equals(param.getAnnotation(QueryParam.class).value())) {
+					return param;
+			} else if (param.getAnnotation(PathParam.class) != null && name.equals(param.getAnnotation(PathParam.class).value())) {
 				return param;
 			}
 		}
