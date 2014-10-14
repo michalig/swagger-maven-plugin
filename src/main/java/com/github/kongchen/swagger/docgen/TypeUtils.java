@@ -59,13 +59,13 @@ public class TypeUtils {
         return t;
     }
     
-    public static Map<String, String> annotationToMap(Annotation annotation) {
+    public static Map<String, Object> annotationToMap(Annotation annotation) {
     	Class<?> annotationClass = annotation.annotationType();
 		Method[] methods = annotationClass.getDeclaredMethods();
-    	Map<String, String> result = new HashMap<String, String>();
+    	Map<String, Object> result = new HashMap<String, Object>();
     	for (Method method : methods) {
 			try {
-				result.put(method.getName(), method.invoke(annotation).toString());
+				result.put(method.getName(), method.invoke(annotation));
 			} catch (IllegalAccessException e) {
 				e.printStackTrace();
 			} catch (IllegalArgumentException e) {

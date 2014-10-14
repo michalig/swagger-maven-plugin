@@ -28,7 +28,7 @@ public class MustacheItem {
 
     private int position;
 
-    private Map<String, Map<String, String>> annotations = new HashMap<String, Map<String,String>>();
+    private Map<String, Map<String, Object>> annotations = new HashMap<String, Map<String,Object>>();
     
     public MustacheItem(String name, ModelProperty documentationSchema, Field field) {
 
@@ -48,7 +48,7 @@ public class MustacheItem {
         }
     }
 
-    public Map<String, Map<String, String>> getAnnotations() {
+    public Map<String, Map<String, Object>> getAnnotations() {
 		return annotations;
 	}
     

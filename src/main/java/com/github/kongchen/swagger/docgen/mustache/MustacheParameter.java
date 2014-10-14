@@ -26,7 +26,7 @@ public class MustacheParameter {
 
     private final String linkType;
 
-	private Map<String, Map<String, String>> annotations;
+	private Map<String, Map<String, Object>> annotations;
 
     public MustacheParameter(ExtendedParameter para) {
         this.name = para.name();
@@ -44,7 +44,7 @@ public class MustacheParameter {
         this.annotations = para.getAnnotations();
     }
 
-    public Map<String, Map<String, String>> getAnnotations() {
+    public Map<String, Map<String, Object>> getAnnotations() {
 		return annotations;
 	}
     

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
@@ -53,16 +55,21 @@ public class ExtendedOperation {
 		});
 	}
 	
-	private java.lang.reflect.Parameter getParameter(Method m, String name) {
-		for(java.lang.reflect.Parameter param : m.getParameters()){
-			if (param.getName().equals(name)) {
+	private java.lang.reflect.Parameter getParameter(Method method, String name) {
+		for(java.lang.reflect.Parameter param : method.getParameters()){
+			if (param.getAnnotation(QueryParam.class) != null && name.equals(param.getAnnotation(QueryParam.class).value())) {
 				return param;
-			} else if (param.getAnnotation(QueryParam.class) != null && name.equals(param.getAnnotation(QueryParam.class).value())) {
-					return param;
 			} else if (param.getAnnotation(PathParam.class) != null && name.equals(param.getAnnotation(PathParam.class).value())) {
+				return param;
+			} else if (param.getAnnotation(CookieParam.class) != null && name.equals(param.getAnnotation(CookieParam.class).value())) {
+				return param;
+			} else if (param.getAnnotation(HeaderParam.class) != null && name.equals(param.getAnnotation(HeaderParam.class).value())) {
+				return param;
+			} else if ("body".equals(name)) {
 				return param;
 			}
 		}
+		System.out.println("Couldn't find param [" + name + "] in method [" + method.getName() + "]");
 		return null;
 	}
 

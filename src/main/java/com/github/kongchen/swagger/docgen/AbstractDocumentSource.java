@@ -13,8 +13,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -345,6 +347,8 @@ public abstract class AbstractDocumentSource {
 			VelocityContext context = new VelocityContext();
 			context.put("template", outputTemplate);
 			context.put("example", exampleProvider);
+			context.put("Arrays", Arrays.class);
+			context.put("CollectionUtils", CollectionUtils.class);
 			t.merge(context, writer);
 			writer.flush();
 			writer.close();

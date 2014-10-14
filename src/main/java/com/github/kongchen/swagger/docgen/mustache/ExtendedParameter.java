@@ -13,7 +13,7 @@ import com.wordnik.swagger.model.Parameter;
 public class ExtendedParameter {
 
 	private Parameter parameter;
-	private Map<String, Map<String, String>> annotations = new HashMap<String, Map<String, String>>();
+	private Map<String, Map<String, Object>> annotations = new HashMap<String, Map<String, Object>>();
 
 	public ExtendedParameter(Parameter parameter, java.lang.reflect.Parameter param) {
 		this.parameter = parameter;
@@ -23,8 +23,8 @@ public class ExtendedParameter {
 			}
 		}
 	}
-	
-	public Map<String, Map<String, String>> getAnnotations() {
+
+	public Map<String, Map<String, Object>> getAnnotations() {
 		return annotations;
 	}
 
