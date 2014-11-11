@@ -33,8 +33,8 @@ public class MustacheItem {
     public MustacheItem(String name, ModelProperty documentationSchema, Field field) {
 
         this.name = name;
+        this.linkType = documentationSchema.type();
         this.type = documentationSchema.type();
-        this.linkType = this.type;
         this.description = Utils.getStrInOption(documentationSchema.description());
         this.required = documentationSchema.required();
         this.notes = Utils.getStrInOption(documentationSchema.description());
@@ -42,6 +42,10 @@ public class MustacheItem {
         this.allowableValue = Utils.allowableValuesToString(documentationSchema.allowableValues());
         this.position = documentationSchema.position();
         if (field != null) {
+        	this.type = field.getType().getSimpleName().toLowerCase();
+        	if (this.type.startsWith("optional")) {
+        		this.type = this.type.substring("optional".length());
+        	}
         	for (Annotation annotation : field.getAnnotations()) {
         		annotations.put(annotation.annotationType().getName(), TypeUtils.annotationToMap(annotation));
         	}

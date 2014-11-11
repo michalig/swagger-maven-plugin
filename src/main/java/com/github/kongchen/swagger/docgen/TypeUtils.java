@@ -22,7 +22,7 @@ public class TypeUtils {
 
     static {
         String[] a = {
-                "string", "boolean", "Date", "int", "Array", "long", "List", "void", "float", "double"
+                "string", "boolean", "Date", "int", "Array", "long", "List", "void", "float", "double", "date", "datetime"
         };
         basicTypes = Arrays.asList(a);
     }
@@ -49,7 +49,11 @@ public class TypeUtils {
                     return dataType;
                 }
             } else {
-                t = dataType;
+            	if (dataType.startsWith("optional")) {
+            		t = dataType.substring("optional".length());
+            	} else {
+            		t = dataType;
+            	}
             }
         }
         if (basicTypes.contains(t)) {
@@ -91,8 +95,10 @@ public class TypeUtils {
     }
 
     public static String filterBasicTypes(String linkType) {
-        if (basicTypes.contains(linkType)) {
-            return null;
+        for (String type: basicTypes) {
+        	if (linkType.toLowerCase().endsWith(type.toLowerCase())) {
+        		return null;
+        	}
         }
         return linkType;
     }

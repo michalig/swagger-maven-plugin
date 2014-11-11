@@ -28,14 +28,16 @@ public class ExtendedOperation {
 	private Operation operation;
 	private List<String> tags;
 	private List<ExtendedParameter> parameters = new ArrayList<ExtendedParameter>();
-	
-	private static final List<String> ordered = Lists.newArrayList("query", "body", "response_header", "path", "header");
+
+	private static final List<String> ordered = Lists
+			.newArrayList("query", "body", "response_header", "path", "header");
 
 	public ExtendedOperation(Operation operation, Method method) {
 		this.operation = operation;
 		ApiOperation apiOperation = method.getAnnotation(ApiOperation.class);
 		if (apiOperation != null) {
-			this.tags = Lists.newArrayList(Splitter.onPattern(",").omitEmptyStrings().trimResults().split(apiOperation.tags()));
+			this.tags = Lists.newArrayList(Splitter.onPattern(",").omitEmptyStrings().trimResults()
+					.split(apiOperation.tags()));
 		}
 		Iterator<Parameter> iterator = operation.parameters().iterator();
 		while (iterator.hasNext()) {
@@ -54,18 +56,24 @@ public class ExtendedOperation {
 			}
 		});
 	}
-	
+
 	private java.lang.reflect.Parameter getParameter(Method method, String name) {
-		for(java.lang.reflect.Parameter param : method.getParameters()){
-			if (param.getAnnotation(QueryParam.class) != null && name.equals(param.getAnnotation(QueryParam.class).value())) {
+		for (java.lang.reflect.Parameter param : method.getParameters()) {
+			if (param.getAnnotation(QueryParam.class) != null
+					&& name.equals(param.getAnnotation(QueryParam.class).value())) {
 				return param;
-			} else if (param.getAnnotation(PathParam.class) != null && name.equals(param.getAnnotation(PathParam.class).value())) {
+			} else if (param.getAnnotation(PathParam.class) != null
+					&& name.equals(param.getAnnotation(PathParam.class).value())) {
 				return param;
-			} else if (param.getAnnotation(CookieParam.class) != null && name.equals(param.getAnnotation(CookieParam.class).value())) {
+			} else if (param.getAnnotation(CookieParam.class) != null
+					&& name.equals(param.getAnnotation(CookieParam.class).value())) {
 				return param;
-			} else if (param.getAnnotation(HeaderParam.class) != null && name.equals(param.getAnnotation(HeaderParam.class).value())) {
+			} else if (param.getAnnotation(HeaderParam.class) != null
+					&& name.equals(param.getAnnotation(HeaderParam.class).value())) {
 				return param;
-			} else if ("body".equals(name)) {
+			} else if (param.getAnnotation(HeaderParam.class) == null && param.getAnnotation(CookieParam.class) == null
+					&& param.getAnnotation(PathParam.class) == null && param.getAnnotation(QueryParam.class) == null
+					&& "body".equals(name)) {
 				return param;
 			}
 		}

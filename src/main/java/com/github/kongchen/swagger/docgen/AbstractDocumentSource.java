@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,6 +20,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 import scala.collection.Iterator;
 import scala.collection.JavaConversions;
@@ -343,7 +345,19 @@ public abstract class AbstractDocumentSource {
 			// use Velocity template - hell yeah!!!
 			VelocityEngine ve = new VelocityEngine();
 			ve.init();
-			Template t = ve.getTemplate(templatePath);
+			Template t;
+			try {
+				t = ve.getTemplate(templatePath);
+			} catch (ResourceNotFoundException rnfe) {
+				// try to load it from the classpath
+				LOG.info("VM template not found - will try to load it from classpath.");
+				ve = new VelocityEngine();
+				ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath"); 
+				ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+				ve.init();
+				t = ve.getTemplate(templatePath);
+				LOG.info("Loaded from classpath.");
+			}
 			VelocityContext context = new VelocityContext();
 			context.put("template", outputTemplate);
 			context.put("example", exampleProvider);
