@@ -36,7 +36,7 @@ public class MustacheParameter {
         	this.linkType = getTrueType(para.dataType());
         }
         this.required = para.required();
-        this.description = Utils.getStrInOption(para.description());
+        this.description = para.description();
         this.type = para.dataType();
         this.defaultValue = Utils.getStrInOption(para.defaultValue());
         this.allowableValue = Utils.allowableValuesToString(para.allowableValues());

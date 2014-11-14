@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.map.LazyMap;
+import org.apache.commons.lang.StringUtils;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
@@ -49,13 +53,23 @@ public class OutputTemplate {
         }
     }
 
-    public Map<String, MustacheDataType> getDataTypesMap() {
+    @SuppressWarnings("unchecked")
+	public Map<String, MustacheDataType> getDataTypesMap() {
     	if (dataTypesMap.isEmpty()) { 
     		for (MustacheDataType dataType : dataTypes) {
     			dataTypesMap.put(dataType.getName(), dataType);
     		}
     	}
-    	return dataTypesMap;
+    	return LazyMap.decorate(dataTypesMap, new Transformer() {
+			@Override
+			public Object transform(Object input) {
+				if (input != null) {
+					return dataTypesMap.get(StringUtils.substringBetween(input.toString(), "[", "]"));
+				} else {
+					return null;
+				}
+			}
+    	});
     }
     
     public Set<MustacheDataType> getDataTypes() {
@@ -73,7 +87,6 @@ public class OutputTemplate {
                 continue;
             }
             addDateType(mustacheDocument, new MustacheDataType(mustacheDocument, trueType));
-
         }
     }
 
