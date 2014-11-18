@@ -7,6 +7,8 @@ import scala.Option;
 import scala.collection.Iterator;
 import scala.collection.immutable.Map;
 
+import com.wordnik.swagger.converter.ModelConverters;
+import com.wordnik.swagger.jersey.JerseyApiReader;
 import com.wordnik.swagger.model.ApiDescription;
 import com.wordnik.swagger.model.ApiListing;
 import com.wordnik.swagger.model.Model;

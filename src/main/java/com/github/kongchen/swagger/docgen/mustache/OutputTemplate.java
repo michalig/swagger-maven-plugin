@@ -15,12 +15,18 @@ import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.lang.StringUtils;
 
+import scala.collection.JavaConversions;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.TypeUtils;
 import com.github.kongchen.swagger.docgen.mavenplugin.ApiSourceInfo;
 import com.github.kongchen.swagger.docgen.util.Utils;
+import com.google.common.collect.Maps;
+import com.sun.media.sound.ModelConnectionBlock;
+import com.wordnik.swagger.converter.ModelConverters;
+import com.wordnik.swagger.model.Model;
 
 /**
  * Created with IntelliJ IDEA.
@@ -64,12 +70,46 @@ public class OutputTemplate {
 			@Override
 			public Object transform(Object input) {
 				if (input != null) {
-					return dataTypesMap.get(StringUtils.substringBetween(input.toString(), "[", "]"));
-				} else {
-					return null;
+					String className = input.toString();
+					String generic = StringUtils.substringBetween(className, "[", "]");
+					if (StringUtils.isNotBlank(generic)) {
+						className = generic;
+					}
+					
+					Class<?> clazz = classForName(className);
+					if (clazz != null) {
+						scala.collection.immutable.List<Model> models = ModelConverters.readAll(clazz);
+						
+						List<Model> modelsList = JavaConversions.asJavaList(models);
+						for (Model model : modelsList) {
+							if (model.id().equals(className)) {
+								Map<String, Model> modelsMap = Maps.newHashMap();
+								modelsMap.put(className, model);
+								apiDocuments.get(0).addModels(modelsMap);
+								return new MustacheDataType(apiDocuments.get(0), className);
+							}
+						}
+					}
 				}
+				return null;
 			}
     	});
+    }
+
+    private Class<?> classForName(String className) {
+    	final Package[] packages = Package.getPackages();
+
+        for (final Package p : packages) {
+            final String pack = p.getName();
+            final String tentative = pack + "." + className;
+            try {
+                return Class.forName(tentative);
+            } catch (final ClassNotFoundException e) {
+                continue;
+            }
+        }
+        
+        return null;
     }
     
     public Set<MustacheDataType> getDataTypes() {
